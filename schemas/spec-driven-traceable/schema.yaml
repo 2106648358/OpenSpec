@@ -61,12 +61,28 @@ artifacts:
       - specs
       - design
 
+  - id: apply
+    generates: apply.md
+    description: Implementation phase - work through tasks.md and implement the change
+    template: apply.md
+    instruction: |
+      Work through the tasks in tasks.md, marking each as complete.
+
+      When ALL tasks are done (code written, tested, working), the traceability artifact
+      will be generated automatically to record the actual spec-code mappings.
+    requires:
+      - tasks
+
   - id: traceability
     generates: tasks/traceability.json
     description: Per-change spec-code traceability mappings
     template: traceability.md
     instruction: |
-      Create tasks/traceability.json after implementation is complete.
+      Create tasks/traceability.json AFTER ALL IMPLEMENTATION TASKS ARE COMPLETE (code written, tested, working).
+
+      Do NOT create traceability.json immediately after creating tasks.md. The task list in tasks.md
+      is a plan; traceability.json records the ACTUAL code locations that implement each requirement.
+      You can only know the real symbols/files/lines after the code changes are made and verified.
 
       CRITICAL format rules (deviation causes archive failure):
       - mappings MUST be an array, NOT an object grouped by type
@@ -77,7 +93,7 @@ artifacts:
       - NO requires mappings in traceability.json (requires is metadata-only)
       - DO NOT add extra fields: no schema, artifacts, implementation, description, tasks
     requires:
-      - tasks
+      - apply
 
 apply:
   requires: [tasks]
