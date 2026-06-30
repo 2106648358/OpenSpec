@@ -1,0 +1,73 @@
+name: spec-driven-traceable
+version: 1
+description: Spec-driven workflow with capability markers and spec-code traceability
+artifacts:
+  - id: proposal
+    generates: proposal.md
+    description: Initial proposal document outlining the change
+    template: proposal.md
+    instruction: |
+      Create the proposal document that establishes WHY this change is needed.
+
+      Include capability markers in the change metadata when this schema is used:
+      - provides: capabilities added or modified by this change
+      - requires: capabilities this change depends on but does not modify
+      - touches: adjacent capabilities touched without ownership
+      - dependsOn: explicit change ordering dependencies
+    requires: []
+
+  - id: specs
+    generates: "specs/**/*.md"
+    description: Detailed specifications for the change
+    template: spec.md
+    instruction: |
+      Create specification files that define WHAT the system should do.
+
+      Create one spec file per capability listed in the proposal's Capabilities section.
+      Use delta sections: ADDED, MODIFIED, REMOVED, or RENAMED Requirements.
+      Every requirement must have at least one scenario.
+    requires:
+      - proposal
+
+  - id: design
+    generates: design.md
+    description: Technical design document with implementation details
+    template: design.md
+    instruction: |
+      Create the design document that explains HOW to implement the change.
+
+      Include the traceability strategy for each capability in provides and touches.
+    requires:
+      - proposal
+
+  - id: tasks
+    generates: tasks.md
+    description: Implementation checklist with trackable tasks
+    template: tasks.md
+    instruction: |
+      Create the task list that breaks down the implementation work.
+
+      Tasks must use checkbox format. Include a task to create tasks/traceability.json
+      after code implementation is complete.
+    requires:
+      - specs
+      - design
+
+  - id: traceability
+    generates: tasks/traceability.json
+    description: Per-change spec-code traceability mappings
+    template: traceability.md
+    instruction: |
+      Create tasks/traceability.json after implementation is complete.
+
+      Map each provided capability requirement to the complete current code locations
+      that implement it. Map touched capabilities with type "touch".
+    requires:
+      - tasks
+
+apply:
+  requires: [tasks]
+  tracks: tasks.md
+  instruction: |
+    Read context files, work through pending tasks, mark complete as you go.
+    When implementation is complete, create tasks/traceability.json before archive.

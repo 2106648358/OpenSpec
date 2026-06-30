@@ -87,6 +87,72 @@ describe('ArchiveCommand', () => {
       await expect(fs.access(changeDir)).rejects.toThrow();
     });
 
+    it('should merge traceability index for traceable changes', async () => {
+      const changeName = 'traceable-feature';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      await fs.mkdir(path.join(changeDir, 'tasks'), { recursive: true });
+
+      await fs.writeFile(
+        path.join(changeDir, '.openspec.yaml'),
+        [
+          'schema: spec-driven-traceable',
+          'provides:',
+          '  - auth/session',
+          '',
+        ].join('\n')
+      );
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1');
+      await fs.writeFile(
+        path.join(changeDir, 'tasks', 'traceability.json'),
+        JSON.stringify({
+          formatVersion: '1',
+          change: changeName,
+          createdAt: '2026-06-29',
+          mappings: [
+            {
+              capability: 'auth/session',
+              requirement: 'Password timeout',
+              type: 'provides',
+              codeLocations: [{ file: 'src/auth/session.ts', symbol: 'checkSessionTimeout' }],
+            },
+          ],
+        })
+      );
+
+      await archiveCommand.execute(changeName, { yes: true, noValidate: true });
+
+      const indexPath = path.join(tempDir, 'openspec', '.traceability', 'index.json');
+      const index = JSON.parse(await fs.readFile(indexPath, 'utf-8'));
+      expect(index.forward['auth/session']['Password timeout'].current).toEqual([
+        { file: 'src/auth/session.ts', symbol: 'checkSessionTimeout' },
+      ]);
+    });
+
+    it('should report traceability errors in json mode', async () => {
+      const changeName = 'missing-traceability';
+      const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);
+      await fs.mkdir(changeDir, { recursive: true });
+
+      await fs.writeFile(
+        path.join(changeDir, '.openspec.yaml'),
+        [
+          'schema: spec-driven-traceable',
+          'provides:',
+          '  - auth/session',
+          '',
+        ].join('\n')
+      );
+      await fs.writeFile(path.join(changeDir, 'tasks.md'), '- [x] Task 1');
+
+      await archiveCommand.execute(changeName, { yes: true, json: true, noValidate: true });
+
+      const output = vi.mocked(console.log).mock.calls
+        .map(call => String(call[0]))
+        .find(call => call.includes('traceability_missing'));
+      expect(output).toBeDefined();
+      expect(JSON.parse(output!).status[0].code).toBe('traceability_missing');
+    });
+
     it('should warn about incomplete tasks', async () => {
       const changeName = 'incomplete-feature';
       const changeDir = path.join(tempDir, 'openspec', 'changes', changeName);

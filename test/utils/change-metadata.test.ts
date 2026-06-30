@@ -54,6 +54,18 @@ describe('ChangeMetadataSchema', () => {
         });
       }
     });
+
+    it('should accept traceability capability markers', () => {
+      const result = ChangeMetadataSchema.safeParse({
+        schema: 'spec-driven-traceable',
+        provides: ['auth/session', 'cli-archive'],
+        requires: ['auth/lockout'],
+        touches: ['auth/middleware'],
+        dependsOn: ['add-password-timeout'],
+      });
+
+      expect(result.success).toBe(true);
+    });
   });
 
   describe('invalid metadata', () => {
@@ -115,6 +127,26 @@ describe('ChangeMetadataSchema', () => {
 
         expect(result.success).toBe(false);
       }
+    });
+
+    it('should reject invalid traceability capability markers', () => {
+      for (const capability of ['Auth/session', 'auth/session/extra', 'auth//session', 'auth_session']) {
+        const result = ChangeMetadataSchema.safeParse({
+          schema: 'spec-driven-traceable',
+          provides: [capability],
+        });
+
+        expect(result.success).toBe(false);
+      }
+    });
+
+    it('should reject invalid dependsOn change identifiers', () => {
+      const result = ChangeMetadataSchema.safeParse({
+        schema: 'spec-driven-traceable',
+        dependsOn: ['Add Password Timeout'],
+      });
+
+      expect(result.success).toBe(false);
     });
   });
 });

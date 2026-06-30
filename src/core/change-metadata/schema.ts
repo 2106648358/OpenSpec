@@ -13,6 +13,10 @@ const KebabIdentifierSchema = (label: string): z.ZodString =>
     }
   });
 
+export const CapabilityIdSchema = z.string().regex(/^[a-z0-9][a-z0-9-]*(\/[a-z0-9][a-z0-9-]*)?$/, {
+  message: 'capability id must be lowercase area or area/sub-area',
+});
+
 export const InitiativeLinkSchema = z.object({
   store: KebabIdentifierSchema('Store id'),
   id: KebabIdentifierSchema('Initiative id'),
@@ -33,6 +37,10 @@ export const ChangeMetadataSchema = z.object({
   goal: z.string().min(1).optional(),
   affected_areas: z.array(z.string().min(1)).optional(),
   initiative: InitiativeLinkSchema.optional(),
+  provides: z.array(CapabilityIdSchema).optional(),
+  requires: z.array(CapabilityIdSchema).optional(),
+  touches: z.array(CapabilityIdSchema).optional(),
+  dependsOn: z.array(KebabIdentifierSchema('Change id')).optional(),
 });
 
 export type ChangeMetadata = z.infer<typeof ChangeMetadataSchema>;

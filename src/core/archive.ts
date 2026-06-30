@@ -18,6 +18,12 @@ import {
   writeUpdatedSpec,
   type SpecUpdate,
 } from './specs-apply.js';
+import { readChangeMetadata } from '../utils/change-metadata.js';
+import {
+  mergeTraceabilityForArchive,
+  isTraceabilityValidationError,
+  type TraceabilityMergeResult,
+} from './traceability/index.js';
 
 async function listActiveChangeNames(changesDir: string): Promise<string[]> {
   try {
@@ -54,6 +60,7 @@ interface ArchiveResult {
   path: string;
   specsUpdated: boolean;
   totals?: { added: number; modified: number; removed: number; renamed: number };
+  traceability?: TraceabilityMergeResult;
 }
 
 /**
@@ -79,6 +86,14 @@ class ArchiveBlockedError extends Error {
 function toArchiveDiagnostic(error: unknown): ArchiveDiagnostic {
   if (error instanceof ArchiveBlockedError) {
     return error.diagnostic;
+  }
+  if (isTraceabilityValidationError(error)) {
+    return {
+      severity: 'error',
+      code: error.code,
+      message: error.message,
+      ...(error.fix ? { fix: error.fix } : {}),
+    };
   }
   if (isRootSelectionError(error)) {
     return error.diagnostic;
@@ -485,6 +500,21 @@ export class ArchiveCommand {
     const archiveName = `${this.getArchiveDate()}-${changeName}`;
     const archivePath = path.join(archiveDir, archiveName);
 
+    let traceability: TraceabilityMergeResult | undefined;
+    const metadata = readChangeMetadata(changeDir, root.path);
+    if (metadata?.schema === 'spec-driven-traceable') {
+      traceability = await mergeTraceabilityForArchive({
+        changeName,
+        changeDir,
+        openspecRoot: root.path,
+        metadata,
+      });
+
+      if (!json) {
+        console.log(`Traceability index updated: ${traceability.mappingCount} mapping(s).`);
+      }
+    }
+
     // Check if archive already exists
     let archiveExists = false;
     try {
@@ -515,6 +545,7 @@ export class ArchiveCommand {
       path: archivePath,
       specsUpdated,
       ...(totals ? { totals } : {}),
+      ...(traceability ? { traceability } : {}),
     };
   }
 
