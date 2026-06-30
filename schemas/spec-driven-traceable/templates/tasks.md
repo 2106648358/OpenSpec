@@ -5,4 +5,10 @@
 
 ## 2. Traceability
 
-- [ ] 2.1 Create `tasks/traceability.json` with complete mappings for provided and touched capabilities.
+- [ ] 2.1 Create `tasks/traceability.json` with the EXACT format from `traceability.md` template:
+  - `mappings` is an array, NOT grouped by type
+  - Each mapping has `capability`, `requirement`, `type`, `codeLocations`
+  - `codeLocations` is an array of `{file, symbol}` (NOT flat `files: string[]`)
+  - Capability IDs use `area` or `area/sub-area` hierarchical format
+  - No extra fields like `schema`, `artifacts`, `implementation`
+  - Only `provides` and `touch` types — NO `requires` mappings in traceability

@@ -9,11 +9,18 @@ artifacts:
     instruction: |
       Create the proposal document that establishes WHY this change is needed.
 
-      Include capability markers in the change metadata when this schema is used:
-      - provides: capabilities added or modified by this change
-      - requires: capabilities this change depends on but does not modify
+      Capability markers are REQUIRED in change metadata when this schema is used.
+      MUST include ALL of the following that apply:
+      - provides: capabilities ADDED or MODIFIED by this change (use hierarchical area/sub-area format)
+      - requires: capabilities depended on but not modified
       - touches: adjacent capabilities touched without ownership
       - dependsOn: explicit change ordering dependencies
+
+      Capability ID RULES:
+      - MUST use hierarchical lowercase format: <area> or <area>/<sub-area>
+      - <area> MUST correspond to an existing or new directory under openspec/specs/<area>/
+      - Hyphen-separated segments only
+      - Do NOT invent flat IDs that don't match the spec directory structure
     requires: []
 
   - id: specs
@@ -47,8 +54,9 @@ artifacts:
     instruction: |
       Create the task list that breaks down the implementation work.
 
-      Tasks must use checkbox format. Include a task to create tasks/traceability.json
-      after code implementation is complete.
+      Tasks must use checkbox format. The FINAL task MUST be creating tasks/traceability.json
+      after code implementation is complete. The traceability.json MUST use the EXACT format
+      from the traceability template — no extra fields, correct data types.
     requires:
       - specs
       - design
@@ -60,8 +68,14 @@ artifacts:
     instruction: |
       Create tasks/traceability.json after implementation is complete.
 
-      Map each provided capability requirement to the complete current code locations
-      that implement it. Map touched capabilities with type "touch".
+      CRITICAL format rules (deviation causes archive failure):
+      - mappings MUST be an array, NOT an object grouped by type
+      - Each mapping MUST have: capability (hierarchical), requirement, type, codeLocations
+      - codeLocations MUST be array of {file, symbol} objects, NOT flat files array
+      - symbol MUST be the enclosing function/method name, NOT class name
+      - type MUST be "provides" or "touch" only — matching .openspec.yaml markers
+      - NO requires mappings in traceability.json (requires is metadata-only)
+      - DO NOT add extra fields: no schema, artifacts, implementation, description, tasks
     requires:
       - tasks
 
@@ -70,4 +84,11 @@ apply:
   tracks: tasks.md
   instruction: |
     Read context files, work through pending tasks, mark complete as you go.
-    When implementation is complete, create tasks/traceability.json before archive.
+    When implementation is complete, create tasks/traceability.json with the EXACT
+    format from the traceability template. Deviations from the format will cause
+    archive to fail. Pay special attention to:
+    - mappings is an ARRAY, not grouped by type
+    - codeLocations uses {file, symbol} objects, not flat files array
+    - symbol is the function/method name (NOT class name)
+    - Capability IDs use hierarchical area/sub-area format
+    - No extra fields beyond the template

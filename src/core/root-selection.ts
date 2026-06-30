@@ -33,7 +33,7 @@ import {
 import { getStoreRootForBackend } from './store/registry.js';
 import { inspectOpenSpecRoot } from './openspec-root.js';
 import { findRepoPlanningRootSync, type PlanningHome } from './planning-home.js';
-import { classifyOpenSpecDir, storePointerProblem } from './project-config.js';
+import { classifyOpenSpecDir, readProjectConfig, storePointerProblem } from './project-config.js';
 import { FileSystemUtils } from '../utils/file-system.js';
 
 export type OpenSpecRootSource = 'store' | 'declared' | 'nearest' | 'implicit';
@@ -54,7 +54,7 @@ export interface ResolvedOpenSpecRoot {
   changesDir: string;
   specsDir: string;
   archiveDir: string;
-  defaultSchema: 'spec-driven';
+  defaultSchema: string;
   source: OpenSpecRootSource;
   storeId?: string;
 }
@@ -110,12 +110,17 @@ function makeRoot(
   source: OpenSpecRootSource,
   storeId?: string
 ): ResolvedOpenSpecRoot {
+  // Read project config.yaml schema field to determine default schema.
+  // Falls back to 'spec-driven' when config is absent or has no schema field.
+  const projectConfig = readProjectConfig(rootPath);
+  const defaultSchema = projectConfig?.schema ?? 'spec-driven';
+
   return {
     path: rootPath,
     changesDir: path.join(rootPath, 'openspec', 'changes'),
     specsDir: path.join(rootPath, 'openspec', 'specs'),
     archiveDir: path.join(rootPath, 'openspec', 'changes', 'archive'),
-    defaultSchema: 'spec-driven',
+    defaultSchema,
     source,
     ...(storeId ? { storeId } : {}),
   };

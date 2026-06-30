@@ -682,6 +682,11 @@ export const COMMAND_REGISTRY: CommandDefinition[] = [
     flags: [],
     subcommands: [
       {
+        name: 'list',
+        description: 'List available schemas',
+        flags: [COMMON_FLAGS.json],
+      },
+      {
         name: 'which',
         description: 'Show where a schema resolves from',
         acceptsPositional: true,

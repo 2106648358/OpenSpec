@@ -8,12 +8,9 @@
 
 ## Capabilities
 
-### New Capabilities
-<!-- Capabilities being introduced. Each should correspond to a provides entry in .openspec.yaml. -->
-- `<name>`: <brief description of what this capability covers>
-
 ### Modified Capabilities
 <!-- Existing capabilities whose requirements are changing. Each should correspond to a provides entry in .openspec.yaml. -->
+<!-- Use hierarchical IDs: <area> or <area>/<sub-area>, matching openspec/specs/<area>/ directory structure -->
 - `<existing-name>`: <what requirement is changing>
 
 ### Required Capabilities

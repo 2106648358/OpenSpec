@@ -297,6 +297,66 @@ export function registerSchemaCommand(program: Command): void {
     console.error('Note: Schema commands are experimental and may change.');
   });
 
+  // schema list
+  schemaCmd
+    .command('list')
+    .alias('ls')
+    .description('List available schemas')
+    .option('--json', 'Output as JSON')
+    .action(async (options?: { json?: boolean }) => {
+      try {
+        const projectRoot = process.cwd();
+        const schemas = getAllSchemasWithResolution(projectRoot);
+
+        if (options?.json) {
+          console.log(JSON.stringify(schemas, null, 2));
+          return;
+        }
+
+        if (schemas.length === 0) {
+          console.log('No schemas found.');
+          return;
+        }
+
+        // Group by source
+        const bySource = {
+          project: schemas.filter((s) => s.source === 'project'),
+          user: schemas.filter((s) => s.source === 'user'),
+          package: schemas.filter((s) => s.source === 'package'),
+        };
+
+        if (bySource.project.length > 0) {
+          console.log('Project schemas:');
+          for (const schema of bySource.project) {
+            const shadowInfo = schema.shadows.length > 0
+              ? ` (shadows: ${schema.shadows.map((s) => s.source).join(', ')})`
+              : '';
+            console.log(`  ${schema.name}${shadowInfo}`);
+          }
+        }
+
+        if (bySource.user.length > 0) {
+          console.log('User schemas:');
+          for (const schema of bySource.user) {
+            const shadowInfo = schema.shadows.length > 0
+              ? ` (shadows: ${schema.shadows.map((s) => s.source).join(', ')})`
+              : '';
+            console.log(`  ${schema.name}${shadowInfo}`);
+          }
+        }
+
+        if (bySource.package.length > 0) {
+          console.log('Package schemas:');
+          for (const schema of bySource.package) {
+            console.log(`  ${schema.name}`);
+          }
+        }
+      } catch (error) {
+        console.error(`Error: ${(error as Error).message}`);
+        process.exitCode = 1;
+      }
+    });
+
   // schema which
   schemaCmd
     .command('which [name]')
