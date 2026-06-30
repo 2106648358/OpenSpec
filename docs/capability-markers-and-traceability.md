@@ -481,3 +481,20 @@ change A 的两个 session.ts symbol 被保留（B 也引用了它们）。rever
 - **测试隔离**：可以在新 schema 下实验和验证 traceability 流程，不影响默认工作流
 - **schema 的自然边界**：traceability 是元数据层（关于 change 的数据），不同于 spec-driven 的 artifacts（change 的内容），属于不同的关注维度
 - **fork 路径可演化**：通过 `openspec schema fork` 派生的副本可以独立演化，不影响内置 schema
+
+---
+
+## 6. 使用方式
+
+创建需要 spec-code traceability 的 change 时，选择 `spec-driven-traceable` schema，并在 `.openspec.yaml` 中声明 capability markers：
+
+```yaml
+schema: spec-driven-traceable
+created: 2026-06-29
+provides:
+  - auth/session
+touches:
+  - auth/middleware
+```
+
+实现完成后，在 change 的 `tasks/traceability.json` 中记录 code locations。archive 该 change 时，OpenSpec 会读取该文件并更新 `openspec/.traceability/index.json`。`spec-driven` change 会保持原有 archive 行为。
